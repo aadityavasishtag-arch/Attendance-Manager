@@ -1,0 +1,76 @@
+# RFID-Based Attendance Record Management System
+
+This starter project combines an Arduino RFID scanner with a C++ console program for managing student records and attendance.
+
+## Hardware
+- Arduino Uno
+- RC522 RFID reader and RFID cards/tags
+- Optional: 16x2 I2C LCD
+- Optional: active buzzer
+- Optional: red and green LEDs with 220-ohm resistors
+- Jumper wires and breadboard
+
+## Wiring (Arduino Uno)
+| RC522 pin | Arduino Uno |
+|---|---|
+| SDA / SS | D10 |
+| SCK | D13 |
+| MOSI | D11 |
+| MISO | D12 |
+| RST | D9 |
+| 3.3V | 3.3V |
+| GND | GND |
+
+Optional outputs:
+- Buzzer positive -> D6, negative -> GND
+- Green LED anode through 220-ohm resistor -> D4; cathode -> GND
+- Red LED anode through 220-ohm resistor -> D5; cathode -> GND
+- I2C LCD SDA -> A4 and SCL -> A5 (check your LCD module's voltage requirements)
+
+**Important:** The RC522 is a 3.3V device. Do not connect its VCC to 5V. Check your specific module's logic-level requirements; use level shifting if required.
+
+## Part A: Upload the Arduino sketch
+1. Install Arduino IDE.
+2. Install the `MFRC522` library through Library Manager.
+3. Open `arduino/rfid_attendance.ino`, choose Arduino Uno, and upload.
+4. Open Serial Monitor at **9600 baud**.
+5. Scan a card. The Serial Monitor prints its UID.
+6. Replace sample UIDs in `students[]` with your actual card UIDs and upload again.
+7. The sample code prevents duplicate marks only until the Arduino restarts.
+
+The LCD code is optional and commented out. To enable it, install a compatible `LiquidCrystal_I2C` library, uncomment the LCD include/object and the LCD blocks, and confirm the I2C address (often 0x27 or 0x3F).
+
+## Part B: Compile the C++ manager
+The PC program is a separate console app. It doesn't directly read the serial port in this starter version: you paste an Arduino attendance line into the app.
+
+Windows (MinGW g++):
+```bash
+g++ attendance_manager.cpp -std=c++17 -o attendance_manager.exe
+attendance_manager.exe
+```
+
+Linux/macOS:
+```bash
+g++ attendance_manager.cpp -std=c++17 -o attendance_manager
+./attendance_manager
+```
+
+The program creates:
+- `students.csv` — registered student data
+- `attendance.csv` — attendance records
+
+### First-time setup
+1. Run the PC program and choose `1. Add student`.
+2. Enter the UID from the Arduino Serial Monitor, plus student ID, name, department and semester.
+3. Add the same UID and name to the Arduino `students[]` array and upload the sketch.
+4. Scan a registered card. Copy the line that starts with `ATTENDANCE,` from Serial Monitor.
+5. In the PC program choose `3` and paste the line.
+6. Choose `4` to view the daily attendance report.
+
+## Limitations / next improvements
+- This is a learning prototype, not a production attendance or security system.
+- Attendance events are pasted manually from Serial Monitor in this version; automatic serial-port integration can be added later.
+- CSV parsing assumes names and fields do not contain commas.
+- The daily report treats students with no record for the chosen date as absent; use it only on days when attendance is expected.
+- Arduino duplicate prevention resets after power loss/restart. The PC program separately prevents duplicate daily records.
+- RFID UIDs are not secure credentials and some cards can be cloned. For real deployments, add appropriate access controls and institutional approval.
